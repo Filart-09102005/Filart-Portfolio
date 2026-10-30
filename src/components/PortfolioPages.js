@@ -27,11 +27,37 @@ const ABOUT_IMAGE_GROUPS = [
     description: "The tools I use to study, code, and build practical systems.",
     mediaClassName: "about-image-stack__media--desk",
     images: [
-      { src: "/gear/asus-tuf-a15.png", alt: "ASUS TUF Gaming A15 laptop", featured: true },
-      { src: "/gear/aula-s75-pro.png", alt: "AULA S75 Pro keyboard" },
-      { src: "/gear/huawei-wireless-mouse.png", alt: "HUAWEI wireless mouse" },
-      { src: "/gear/desky-sit-stand-desk.png", alt: "Desky sit-stand desk" },
-      { src: "/gear/asus-dual-monitors.png", alt: "ASUS dual monitor setup" },
+      {
+        src: "/gear/asus-tuf-a15.png",
+        alt: "ASUS TUF Gaming A15 laptop",
+        title: "ASUS TUF Gaming A15",
+        description: "My main machine for studying, coding, and building projects.",
+        featured: true,
+      },
+      {
+        src: "/gear/aula-s75-pro.png",
+        alt: "AULA S75 Pro keyboard",
+        title: "AULA S75 Pro",
+        description: "Mechanical keys for long coding and study sessions.",
+      },
+      {
+        src: "/gear/huawei-wireless-mouse.png",
+        alt: "HUAWEI wireless mouse",
+        title: "HUAWEI Mouse",
+        description: "A reliable mouse for moving between code and tasks.",
+      },
+      {
+        src: "/gear/desky-sit-stand-desk.png",
+        alt: "Desky sit-stand desk",
+        title: "DESKY Sit-Stand Desk",
+        description: "Room to focus and switch positions during long sessions.",
+      },
+      {
+        src: "/gear/asus-dual-monitors.png",
+        alt: "ASUS dual monitor setup",
+        title: "ASUS Dual Monitors",
+        description: "Extra space for code, docs, and project tools side by side.",
+      },
     ],
   },
   {
@@ -41,8 +67,19 @@ const ABOUT_IMAGE_GROUPS = [
     description: "My phone and earbuds for the everyday moments between projects.",
     mediaClassName: "about-image-stack__media--carry",
     images: [
-      { src: "/gear/vivo-x200-pro.png", alt: "Vivo X200 Pro phone", featured: true },
-      { src: "/gear/vivo-wireless-earbuds.png", alt: "Vivo wireless earbuds" },
+      {
+        src: "/gear/vivo-x200-pro.png",
+        alt: "Vivo X200 Pro phone",
+        title: "VIVO X200 Pro",
+        description: "My everyday phone for photos, notes, and ideas on the go.",
+        featured: true,
+      },
+      {
+        src: "/gear/vivo-wireless-earbuds.png",
+        alt: "Vivo wireless earbuds",
+        title: "VIVO Wireless Earbuds",
+        description: "Always close for listening to my favorite music between tasks.",
+      },
     ],
   },
   {
@@ -160,8 +197,18 @@ function AboutImageStackCard({ item }) {
       </div>
       <div className={`about-image-stack__media ${item.mediaClassName}`}>
         {item.images.map((image) => (
-          <div className="about-image-stack__tile" data-featured={image.featured ? "" : undefined} key={image.src}>
+          <div
+            className={`about-image-stack__tile${image.title ? " about-image-stack__tile--captioned" : ""}`}
+            data-featured={image.featured ? "" : undefined}
+            key={image.src}
+          >
             <Image src={image.src} alt={image.alt} fill sizes="(max-width: 700px) 42vw, 22vw" />
+            {image.title && (
+              <div className="about-image-stack__tile-copy">
+                <h4>{image.title}</h4>
+                <p>{image.description}</p>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -441,6 +488,8 @@ const PROJECTS = [
       description: "Create forms for evaluations, quizzes, and other needs.",
       monogram: "F",
       visual: "forms",
+      image: "/personal-projects/formora.png",
+      imageAlt: "Formora form builder interface for creating and reviewing forms",
     },
 ];
 
@@ -834,35 +883,35 @@ const deskSetupGear = [
   {
     brand: "ASUS",
     name: "TUF Gaming A15",
-    description: "Gaming laptop for the desk setup.",
+    description: "My main machine for studying, coding, and building full-stack projects.",
     image: "/gear/asus-tuf-a15.png",
     alt: "Open matte-black gaming laptop with a dark display and subtle green lighting.",
   },
   {
     brand: "AULA",
     name: "S75 Pro",
-    description: "Compact mechanical keyboard.",
+    description: "Mechanical keys make long coding and study sessions more comfortable.",
     image: "/gear/aula-s75-pro.png",
     alt: "Compact dark mechanical keyboard with gray and sage accent keys.",
   },
   {
     brand: "HUAWEI",
     name: "Mouse",
-    description: "Black wireless mouse.",
+    description: "A reliable wireless mouse for navigating code and moving between tasks.",
     image: "/gear/huawei-wireless-mouse.png",
     alt: "Minimal black wireless mouse photographed on a dark surface.",
   },
   {
     brand: "DESKY",
     name: "Sit-Stand Desk",
-    description: "Height-adjustable desk with a dark wood top.",
+    description: "A sit-stand workspace that gives me room to focus and change position during long sessions.",
     image: "/gear/desky-sit-stand-desk.png",
     alt: "Dark wood sit-stand desk with black adjustable legs.",
   },
   {
     brand: "ASUS",
     name: "Dual Monitors",
-    description: "Two-screen desktop setup.",
+    description: "Extra screen space for code, documentation, and project tools side by side.",
     image: "/gear/asus-dual-monitors.png",
     alt: "Two slim black monitors side by side with dark abstract screens.",
   },
@@ -872,14 +921,14 @@ const everydayCarryGear = [
   {
     brand: "VIVO",
     name: "X200 Pro",
-    description: "512GB · 200MP camera.",
+    description: "My 512GB everyday phone, with a 200MP camera for photos and capturing ideas on the go.",
     image: "/gear/vivo-x200-pro.png",
     alt: "Graphite smartphone shown from the back with a prominent circular camera array.",
   },
   {
     brand: "VIVO",
     name: "Airpods",
-    description: "Wireless earbuds with a charging case.",
+    description: "Always close by for listening to my favorite music while I study, code, or take a break.",
     image: "/gear/vivo-wireless-earbuds.png",
     alt: "Pair of graphite wireless earbuds in an open charging case.",
   },
