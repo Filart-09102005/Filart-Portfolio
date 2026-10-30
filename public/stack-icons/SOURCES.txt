@@ -1,0 +1,5 @@
+Brand SVG icons: Devicon (MIT), https://github.com/devicons/devicon
+DaisyUI and shadcn/ui icons: Simple Icons (CC0), https://github.com/simple-icons/simple-icons
+reactbits.svg is a local monogram for the React Bits library, which has no Devicon/Simple Icons asset.
+OpenAI and Anthropic SVG icons: LobeHub Icons (MIT), https://github.com/lobehub/lobe-icons; license is in LICENSE-LOBEHUB.txt.
+oauth.svg is a local generic authorization symbol for the OAuth protocol.
