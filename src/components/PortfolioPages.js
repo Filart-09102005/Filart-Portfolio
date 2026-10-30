@@ -627,7 +627,6 @@ export function AboutMeContent() {
             damping={0.58}
             elasticity={0.46}
             breeze={0.42}
-            constrainDrag
             className="about-page-lanyard"
           />
           <span className="about-page-lanyard-cue" aria-hidden="true">
