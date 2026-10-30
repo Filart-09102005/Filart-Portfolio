@@ -192,11 +192,26 @@ function IdentityBlock({ intro = false }) {
 export function HeroCopy({ intro = false, className = "", summary = "", showActions = true, showScrollCue = true }) {
   return (
     <div className={`hero-copy${intro ? " intro-copy" : ""}${className ? ` ${className}` : ""}`}>
+      {summary && <p className="identity-kicker home-page-index">05 / HOME</p>}
       <IdentityBlock intro={intro} />
       {summary && (
         <div className="home-profile-summary">
           <p className="home-profile-summary__label">A LITTLE ABOUT ME</p>
-          <p>{summary}</p>
+          <p className="home-profile-summary__copy">{summary}</p>
+          <nav className="home-profile-socials" aria-label="Hans Filart social profiles">
+            <a href="https://www.facebook.com/hanschan.filart" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M13.6 21v-8.2h2.8l.4-3.2h-3.2v-2c0-.9.3-1.6 1.6-1.6H17V3.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.3H7.5v3.2h2.8V21h3.3Z" fill="currentColor" /></svg>
+              <span>Facebook</span>
+            </a>
+            <a href="https://www.instagram.com/chanfilart?xtok=NnRwcHhtdm8wYmh6" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="17" height="17" rx="5" fill="none" stroke="currentColor" strokeWidth="1.7" /><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.7" /><circle cx="17.7" cy="6.6" r="1.1" fill="currentColor" /></svg>
+              <span>Instagram</span>
+            </a>
+            <a href="https://github.com/Filart-09102005" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 .9a11.1 11.1 0 0 0-3.5 21.6c.6.1.8-.3.8-.6v-2.1c-3.1.7-3.8-1.3-3.8-1.3-.5-1.3-1.2-1.6-1.2-1.6-1-.7.1-.7.1-.7 1.1.1 1.7 1.1 1.7 1.1 1 .1.7 2.1 3.9 1.5.1-.7.4-1.2.7-1.5-2.5-.3-5.1-1.2-5.1-5.5 0-1.2.4-2.2 1.1-3-.1-.3-.5-1.5.1-3 0 0 .9-.3 3 1.1a10.4 10.4 0 0 1 5.5 0c2.1-1.4 3-1.1 3-1.1.6 1.5.2 2.7.1 3 .7.8 1.1 1.8 1.1 3 0 4.3-2.6 5.2-5.1 5.5.4.3.8 1 .8 2v2.9c0 .3.2.7.8.6A11.1 11.1 0 0 0 12 .9Z" /></svg>
+              <span>GitHub</span>
+            </a>
+          </nav>
         </div>
       )}
       {showActions && (
@@ -213,14 +228,14 @@ export function HeroCopy({ intro = false, className = "", summary = "", showActi
 }
 
 const homeOverviewItems = [
-  { number: "01", title: "Projects", description: "Selected work and interface explorations.", href: "/Projects" },
+  { number: "01", title: "Recommendations", description: "Perspectives on my portfolio, projects, and how I work.", href: "/Recommendation" },
   { number: "02", title: "Experience", description: "Study, practice, and progress so far.", href: "/Experience" },
-  { number: "03", title: "Certifications", description: "Credentials and continued learning.", href: "/Certification" },
-  { number: "04", title: "Stacks", description: "Tools and technologies I work with.", href: "/Stack" },
-  { number: "05", title: "Gear", description: "A look at my everyday setup.", href: "/Gear" },
-  { number: "06", title: "Recommendations", description: "Perspectives on my portfolio, projects, and how I work.", href: "/Recommendation" },
-  { number: "07", title: "Consulting", description: "Have a project, idea, or question to discuss?", href: "/Consulting" },
-  { number: "08", title: "About me", description: "A little more about the person behind the work.", href: "/AboutMe" },
+  { number: "03", title: "Projects", description: "Selected work and interface explorations.", href: "/Projects" },
+  { number: "04", title: "Gear", description: "A look at my everyday setup.", href: "/Gear" },
+  { number: "06", title: "Stacks", description: "Tools and technologies I work with.", href: "/Stack" },
+  { number: "07", title: "About me", description: "A little more about the person behind the work.", href: "/AboutMe" },
+  { number: "08", title: "Consulting", description: "Have a project, idea, or question to discuss?", href: "/Consulting" },
+  { number: "09", title: "Certifications", description: "Credentials and continued learning.", href: "/Certification" },
 ];
 
 const HOME_FEATURED_STACK = [
@@ -455,7 +470,7 @@ export function ProjectsContent() {
           threshold={0.1}
         >
           <div className="projects-page__eyebrow">
-            <p><span>02</span> / PROJECTS</p>
+            <p><span>03</span> / PROJECTS</p>
             <span>CLIENT, STUDENT &amp; PERSONAL WORK</span>
           </div>
           <div className="projects-page__intro">
@@ -542,7 +557,7 @@ export function AboutMeContent() {
       >
       <div className="about-page__hero">
         <div className="about-page__copy">
-          <p className="about-page__eyebrow">ABOUT / HANS FILART</p>
+          <p className="about-page__eyebrow">07 / ABOUT ME · HANS FILART</p>
           <h1 id="about-title">About<br /><span>me.</span></h1>
           <p className="about-page__lead">I&apos;m Hans, a BSIT student and developer who learns by building.</p>
           <p className="about-page__body">My work includes client systems, school projects, and ideas I build to explore web and mobile development. I care about clarity, useful interactions, and the details that make tools feel easy to use.</p>
@@ -729,7 +744,7 @@ export function ExperienceContent() {
           duration={0.9}
           threshold={0.18}
         >
-          <p className="experience-page__eyebrow"><span>01</span> / JOURNEY</p>
+          <p className="experience-page__eyebrow"><span>02</span> / JOURNEY</p>
         </AnimatedContent>
         <AnimatedContent
           className="experience-page__title-reveal"

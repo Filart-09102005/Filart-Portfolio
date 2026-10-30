@@ -63,6 +63,8 @@ export default function OptionWheel({
   const wheelTimerRef = useRef(null);
   const dragRef = useRef(null);
   const dragMovedRef = useRef(false);
+  const suppressTouchClickRef = useRef(false);
+  const suppressTouchClickTimerRef = useRef(null);
   const audioRef = useRef(null);
   const audioUrlRef = useRef("");
   const lastTickRef = useRef(0);
@@ -126,7 +128,10 @@ export default function OptionWheel({
     const target = targetRef.current;
     const cur = posRef.current;
     let next = cur + (target - cur) * k;
-    const settled = Math.abs(target - next) < 0.001;
+    // Treat the wheel as settled once the remaining movement is visually
+    // imperceptible. A very strict epsilon kept click-to-navigate waiting
+    // hundreds of milliseconds after the labels already looked still.
+    const settled = Math.abs(target - next) < 0.008;
     if (settled) next = target;
     posRef.current = next;
 
@@ -262,23 +267,31 @@ export default function OptionWheel({
     }
   }, []);
 
+  const clearWheelTimer = useCallback(() => {
+    if (wheelTimerRef.current == null) return;
+    clearTimeout(wheelTimerRef.current);
+    wheelTimerRef.current = null;
+  }, []);
+
   useEffect(() => {
     const element = rootRef.current;
     if (!element) return undefined;
 
     function handleWheel(event) {
+      if (Math.abs(event.deltaY) < 0.01) return;
       event.preventDefault();
       onInteractionStartRef.current?.();
       cancelQueuedSelection();
       const cfg = cfgRef.current;
       const delta = event.deltaMode === 1 ? event.deltaY * 24 : event.deltaY;
-      const step = Math.max(-1, Math.min(1, delta / cfg.rowH));
+      const step = Math.max(-1, Math.min(1, (delta / cfg.rowH) * 1.1));
       applyTarget(targetRef.current + step, false);
-      if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
+      clearWheelTimer();
       wheelTimerRef.current = setTimeout(() => {
+        wheelTimerRef.current = null;
         applyTarget(targetRef.current, true);
         queueSelection();
-      }, 140);
+      }, 130);
     }
 
     element.addEventListener("wheel", handleWheel, { passive: false });
@@ -286,18 +299,26 @@ export default function OptionWheel({
       element.removeEventListener("wheel", handleWheel);
       if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
     };
-  }, [applyTarget, cancelQueuedSelection, queueSelection]);
+  }, [applyTarget, cancelQueuedSelection, clearWheelTimer, queueSelection]);
 
   const handlePointerDown = useCallback((event) => {
-    if (!cfgRef.current.draggable) return;
+    if (!cfgRef.current.draggable || event.isPrimary === false || event.pointerType === "touch") return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    clearWheelTimer();
     cancelQueuedSelection();
-    dragRef.current = { y: event.clientY, start: targetRef.current, id: event.pointerId };
+    dragRef.current = {
+      y: event.clientY,
+      start: targetRef.current,
+      id: event.pointerId,
+      pointerType: event.pointerType,
+    };
     dragMovedRef.current = false;
     setIsDragging(true);
-  }, [cancelQueuedSelection]);
+  }, [cancelQueuedSelection, clearWheelTimer]);
 
   const handlePointerMove = useCallback(
     (event) => {
+      if (event.pointerType === "touch") return;
       const drag = dragRef.current;
       if (!drag) return;
       const deltaY = event.clientY - drag.y;
@@ -315,7 +336,8 @@ export default function OptionWheel({
     [applyTarget],
   );
 
-  const handlePointerEnd = useCallback(() => {
+  const handlePointerEnd = useCallback((event) => {
+    if (event?.pointerType === "touch") return;
     if (!dragRef.current) return;
     dragRef.current = null;
     setIsDragging(false);
@@ -327,10 +349,20 @@ export default function OptionWheel({
 
   const handleItemClick = useCallback(
     (index) => {
+      if (suppressTouchClickRef.current) {
+        suppressTouchClickRef.current = false;
+        if (suppressTouchClickTimerRef.current) {
+          clearTimeout(suppressTouchClickTimerRef.current);
+          suppressTouchClickTimerRef.current = null;
+        }
+        return;
+      }
       if (dragMovedRef.current) return;
       const cfg = cfgRef.current;
       if (!cfg.count) return;
 
+      clearWheelTimer();
+      cancelQueuedSelection();
       onInteractionStartRef.current?.();
       const current = targetRef.current;
       let delta = index - (((current % cfg.count) + cfg.count) % cfg.count);
@@ -342,21 +374,118 @@ export default function OptionWheel({
       applyTarget(current + delta, true);
       queueSelection();
     },
-    [applyTarget, queueSelection],
+    [applyTarget, cancelQueuedSelection, clearWheelTimer, queueSelection],
   );
+
+  useEffect(() => {
+    const element = rootRef.current;
+    if (!element) return undefined;
+
+    function handleTouchStart(event) {
+      if (!cfgRef.current.draggable || dragRef.current || event.changedTouches.length === 0) return;
+      if (suppressTouchClickTimerRef.current) {
+        clearTimeout(suppressTouchClickTimerRef.current);
+        suppressTouchClickTimerRef.current = null;
+      }
+      suppressTouchClickRef.current = false;
+      const touch = event.changedTouches[0];
+      const option = event.target.closest?.("[data-option-index]");
+      clearWheelTimer();
+      cancelQueuedSelection();
+      dragRef.current = {
+        y: touch.clientY,
+        start: targetRef.current,
+        id: touch.identifier,
+        pointerType: "touch",
+        startIndex: option ? Number(option.dataset.optionIndex) : null,
+      };
+      dragMovedRef.current = false;
+      setIsDragging(true);
+    }
+
+    function handleTouchMove(event) {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerType !== "touch") return;
+      const touch = Array.from(event.changedTouches).find((item) => item.identifier === drag.id);
+      if (!touch) return;
+
+      event.preventDefault();
+      const deltaY = touch.clientY - drag.y;
+      if (!dragMovedRef.current && Math.abs(deltaY) > 4) {
+        dragMovedRef.current = true;
+        onInteractionStartRef.current?.();
+      }
+      if (dragMovedRef.current) {
+        applyTarget(drag.start - deltaY / cfgRef.current.rowH, false);
+      }
+    }
+
+    function finishTouch(event) {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerType !== "touch") return;
+      const touch = Array.from(event.changedTouches).find((item) => item.identifier === drag.id);
+      if (!touch) return;
+
+      dragRef.current = null;
+      setIsDragging(false);
+      const wasDrag = dragMovedRef.current;
+      if (wasDrag) {
+        applyTarget(targetRef.current, true);
+        queueSelection();
+      } else if (Number.isInteger(drag.startIndex)) {
+        handleItemClick(drag.startIndex);
+      }
+
+      if (wasDrag || Number.isInteger(drag.startIndex)) {
+        suppressTouchClickRef.current = true;
+        if (suppressTouchClickTimerRef.current) clearTimeout(suppressTouchClickTimerRef.current);
+        suppressTouchClickTimerRef.current = setTimeout(() => {
+          suppressTouchClickRef.current = false;
+          suppressTouchClickTimerRef.current = null;
+        }, 500);
+      }
+    }
+
+    function handleContextMenu(event) {
+      if (cfgRef.current.draggable) event.preventDefault();
+    }
+
+    element.addEventListener("touchstart", handleTouchStart, { passive: true });
+    element.addEventListener("touchmove", handleTouchMove, { passive: false });
+    element.addEventListener("touchend", finishTouch, { passive: true });
+    element.addEventListener("touchcancel", finishTouch, { passive: true });
+    element.addEventListener("contextmenu", handleContextMenu);
+
+    return () => {
+      element.removeEventListener("touchstart", handleTouchStart);
+      element.removeEventListener("touchmove", handleTouchMove);
+      element.removeEventListener("touchend", finishTouch);
+      element.removeEventListener("touchcancel", finishTouch);
+      element.removeEventListener("contextmenu", handleContextMenu);
+    };
+  }, [applyTarget, cancelQueuedSelection, clearWheelTimer, handleItemClick, queueSelection]);
 
   const handleKeyDown = useCallback(
     (event) => {
       let delta = null;
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        clearWheelTimer();
+        onInteractionStartRef.current?.();
+        applyTarget(Math.round(targetRef.current), true);
+        queueSelection();
+        return;
+      }
       if (event.key === "ArrowUp" || event.key === "ArrowLeft") delta = -1;
       else if (event.key === "ArrowDown" || event.key === "ArrowRight") delta = 1;
       if (delta == null) return;
       event.preventDefault();
+      clearWheelTimer();
       onInteractionStartRef.current?.();
       applyTarget(Math.round(targetRef.current) + delta, true);
       queueSelection();
     },
-    [applyTarget, queueSelection],
+    [applyTarget, clearWheelTimer, queueSelection],
   );
 
   const handleItemPointerEnter = useCallback((event, index) => {
@@ -398,6 +527,7 @@ export default function OptionWheel({
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       if (commitFrameRef.current != null) cancelAnimationFrame(commitFrameRef.current);
       if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
+      if (suppressTouchClickTimerRef.current) clearTimeout(suppressTouchClickTimerRef.current);
       rafRef.current = null;
       audioRef.current?.pause();
     },
@@ -436,6 +566,7 @@ export default function OptionWheel({
           role="option"
           aria-selected={selectedIndex === index}
           className={`option-wheel__item${selectedIndex === index ? " option-wheel__item--selected" : ""}`}
+          data-option-index={index}
           style={{ "--sidebar-stagger-delay": `${index * 38}ms` }}
           onPointerEnter={(event) => handleItemPointerEnter(event, index)}
           onClick={() => handleItemClick(index)}

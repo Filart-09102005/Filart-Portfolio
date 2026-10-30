@@ -67,6 +67,7 @@ export default function GearPageReveal({ deskSetupGear, everydayCarryGear }) {
           threshold={0.12}
           onRevealComplete={completeHeader}
         >
+          <p className="gear-page__eyebrow">04 / GEAR</p>
           <h1 id="gear-title">Gear</h1>
           <p>The hardware and tools I use to build, create, and stay productive, including my desk setup, everyday carry, and the kit I shoot content with.</p>
         </GearScrollReveal>

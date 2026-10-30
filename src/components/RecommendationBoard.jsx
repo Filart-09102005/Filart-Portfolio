@@ -3,99 +3,6 @@
 import { useCallback, useState } from "react";
 import GearScrollReveal from "./GearScrollReveal";
 
-const DEMO_RECOMMENDATIONS = [
-  {
-    id: "demo-short",
-    name: "Demo reader · Short",
-    recommendation: "A thoughtful portfolio that’s easy to explore.",
-    isDemo: true,
-  },
-  {
-    id: "demo-medium",
-    name: "Demo reader · Medium",
-    recommendation: "The project descriptions give a clear sense of what Hans builds, while the visual details make the site memorable.",
-    isDemo: true,
-  },
-  {
-    id: "demo-long",
-    name: "Demo reader · Long",
-    recommendation: "I like how the portfolio brings projects, tools, and personal interests together. It feels considered without making it difficult to find the important details.",
-    isDemo: true,
-  },
-  {
-    id: "demo-extended",
-    name: "Demo reader · Extended",
-    recommendation: "This portfolio gives a useful overview of Hans’s work and learning journey. The project sections explain the purpose behind each idea, and the separate pages make it easy to explore more when something catches your attention. The overall presentation feels personal and shows care in both the design and the way the information is organized.",
-    isDemo: true,
-  },
-  {
-    id: "demo-projects",
-    name: "Demo reader · Projects",
-    recommendation: "The project pages make it easy to understand what each product is for.",
-    isDemo: true,
-  },
-  {
-    id: "demo-learning",
-    name: "Demo reader · Learning",
-    recommendation: "I appreciate how the portfolio shares both finished work and the learning behind it. It feels honest and motivating.",
-    isDemo: true,
-  },
-  {
-    id: "demo-web",
-    name: "Demo reader · Web",
-    recommendation: "The web projects feel purposeful, and the descriptions explain the problems they’re meant to solve.",
-    isDemo: true,
-  },
-  {
-    id: "demo-mobile",
-    name: "Demo reader · Mobile",
-    recommendation: "The mobile app work shows a nice mix of practical features and thoughtful interface details.",
-    isDemo: true,
-  },
-  {
-    id: "demo-details",
-    name: "Demo reader · Details",
-    recommendation: "The design feels cohesive from page to page. Small details make it enjoyable to explore without distracting from the work.",
-    isDemo: true,
-  },
-  {
-    id: "demo-collaboration",
-    name: "Demo reader · Collaboration",
-    recommendation: "Hans listens carefully, asks useful questions, and turns ideas into clear next steps. Working through a project together feels organized and collaborative. The portfolio reflects that same care by explaining the goal and thinking behind each piece of work.",
-    isDemo: true,
-  },
-  {
-    id: "demo-navigation",
-    name: "Demo reader · Navigation",
-    recommendation: "There’s a lot to explore, but the navigation makes it easy to find what I’m interested in.",
-    isDemo: true,
-  },
-  {
-    id: "demo-growth",
-    name: "Demo reader · Growth",
-    recommendation: "The portfolio shows steady growth as a developer. The mix of client work, school projects, and personal ideas gives a helpful picture of what Hans is learning and building.",
-    isDemo: true,
-  },
-  {
-    id: "demo-purpose",
-    name: "Demo reader · Purpose",
-    recommendation: "Clear, personal, and easy to browse.",
-    isDemo: true,
-  },
-  {
-    id: "demo-overview",
-    name: "Demo reader · Overview",
-    recommendation: "This site gives a welcoming overview of Hans’s work. The project summaries are concise, and the individual sections make it possible to explore the details at your own pace. I also like that it includes the tools and learning journey behind the finished projects.",
-    isDemo: true,
-  },
-  {
-    id: "demo-journey",
-    name: "Demo reader · Journey",
-    recommendation: "The site makes the development journey feel approachable. It presents real work, explains the context, and leaves room for the next ideas to grow. It’s a strong snapshot of a student developer building experience one project at a time.",
-    isDemo: true,
-  },
-];
-
 function initialFor(name) {
   return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 }
@@ -103,7 +10,7 @@ function initialFor(name) {
 export default function RecommendationBoard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [recommendations, setRecommendations] = useState(DEMO_RECOMMENDATIONS);
+  const [recommendations, setRecommendations] = useState([]);
   const [status, setStatus] = useState({ type: "idle", message: "" });
   const [headerComplete, setHeaderComplete] = useState(false);
   const finishHeader = useCallback(() => setHeaderComplete(true), []);
@@ -173,7 +80,10 @@ export default function RecommendationBoard() {
         threshold={0.14}
         onRevealComplete={finishHeader}
       >
-        <p className="recommendation-page__eyebrow">PEOPLE · PORTFOLIO · PROJECTS</p>
+        <p className="recommendation-page__eyebrow">
+          <span>01 / RECOMMENDATION</span>
+          <span className="recommendation-page__context">PEOPLE · PORTFOLIO · PROJECTS</span>
+        </p>
         <div className="recommendation-page__title-row">
           <h1 id="recommendation-title">Recommendation</h1>
           <button
@@ -253,7 +163,7 @@ export default function RecommendationBoard() {
 
       <GearScrollReveal
         className="recommendation-list-reveal"
-        targetSelector=".recommendation-page__demo-note, .recommendation-card, .recommendation-empty"
+        targetSelector=".recommendation-card, .recommendation-empty"
         enabled={headerComplete}
         stagger={0.12}
         distance={18}
@@ -261,18 +171,12 @@ export default function RecommendationBoard() {
         duration={0.76}
         threshold={0.14}
       >
-        {recommendations.some((entry) => entry.isDemo) && (
-          <p className="recommendation-page__demo-note" role="note">
-            Sample copy for layout preview. These are not real recommendations.
-          </p>
-        )}
-
         {recommendations.length ? (
           <div className="recommendation-grid" role="list" aria-label="Submitted recommendations">
             {recommendations.map((entry, index) => (
-              <article className={`recommendation-card${entry.isDemo ? " recommendation-card--demo" : ""}`} key={entry.id} role="listitem">
+              <article className="recommendation-card" key={entry.id} role="listitem">
                 <span className="recommendation-card__number">
-                  {entry.isDemo ? "DEMO · SAMPLE COPY" : `${String(index + 1).padStart(2, "0")} / RECOMMENDATION`}
+                  {`${String(index + 1).padStart(2, "0")} / RECOMMENDATION`}
                 </span>
                 <blockquote>{entry.recommendation}</blockquote>
                 <footer className="recommendation-card__footer">

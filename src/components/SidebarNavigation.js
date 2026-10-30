@@ -53,7 +53,7 @@ export default function SidebarNavigation({ onNavigate }) {
       blur={0.45}
       fade={0.28}
       minOpacity={0.24}
-      smoothing={190}
+      smoothing={90}
       inset="calc(50% - 84px)"
       draggable
       onSelect={navigateToPage}

@@ -27,7 +27,7 @@ export default function StackPageReveal({ items }) {
           onRevealComplete={completeHeader}
         >
           <div className="stack-page__eyebrow">
-            <p><span>03</span> / STACKS</p>
+            <p><span>06</span> / STACKS</p>
             <span>TOOLS SHAPE IDEAS</span>
           </div>
           <div className="stack-page__intro">

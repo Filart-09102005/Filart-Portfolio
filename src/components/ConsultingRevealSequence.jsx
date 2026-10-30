@@ -7,10 +7,12 @@ import GearScrollReveal from "./GearScrollReveal";
 
 export default function ConsultingRevealSequence({ children }) {
   const [headerComplete, setHeaderComplete] = useState(false);
+  const [formShellComplete, setFormShellComplete] = useState(false);
   const [formComplete, setFormComplete] = useState(false);
   const [pathwaysComplete, setPathwaysComplete] = useState(false);
 
   const finishHeader = useCallback(() => setHeaderComplete(true), []);
+  const finishFormShell = useCallback(() => setFormShellComplete(true), []);
   const finishForm = useCallback(() => setFormComplete(true), []);
   const finishPathways = useCallback(() => setPathwaysComplete(true), []);
 
@@ -26,24 +28,35 @@ export default function ConsultingRevealSequence({ children }) {
         onRevealComplete={finishHeader}
       >
         <header className="contact-page__header">
-          <p className="contact-page__eyebrow">CONSULTING <span aria-hidden="true" /></p>
+          <p className="contact-page__eyebrow">08 / CONSULTING <span aria-hidden="true" /></p>
           <h1 id="consulting-title">Tell me about<br />your <span>idea.</span></h1>
           <p>I’m open to web commissions, system ideas, portfolio feedback, and thoughtful consultations. Share a few details and I’ll reply with next steps.</p>
         </header>
       </GearScrollReveal>
 
       <GearScrollReveal
-        className="contact-form-reveal"
-        targetSelector=".contact-form__heading, .contact-form__fields > label, .contact-form__helper, .contact-form__footer"
+        className="contact-form-shell-reveal"
+        targetSelector=".contact-form"
         enabled={headerComplete}
-        stagger={0.08}
         distance={18}
         blur={6}
-        duration={0.72}
+        duration={0.62}
         threshold={0.16}
-        onRevealComplete={finishForm}
+        onRevealComplete={finishFormShell}
       >
-        <ContactForm />
+        <GearScrollReveal
+          className="contact-form-reveal"
+          targetSelector=".contact-form__heading, .contact-form__fields > .contact-form__field, .contact-form__helper, .contact-form__footer"
+          enabled={formShellComplete}
+          stagger={0.08}
+          distance={18}
+          blur={6}
+          duration={0.72}
+          threshold={0.16}
+          onRevealComplete={finishForm}
+        >
+          <ContactForm />
+        </GearScrollReveal>
       </GearScrollReveal>
 
       <GearScrollReveal

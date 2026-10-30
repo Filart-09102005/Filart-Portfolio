@@ -213,7 +213,7 @@ export default function HomeFeaturedShowcase({ projects, certificates, stack }) 
          
           aria-label="Featured projects"
         >
-          <ShowcaseHeading number="02" title="PROJECTS" href="/Projects" action="ALL PROJECTS" compact />
+          <ShowcaseHeading number="03" title="PROJECTS" href="/Projects" action="ALL PROJECTS" compact />
           <HomeProjectCarousel
             projects={projects.slice(0, 3)}
             focusedIndex={focusedProject}
@@ -250,7 +250,7 @@ export default function HomeFeaturedShowcase({ projects, certificates, stack }) 
           threshold={0.16}
         >
         <section className="home-feature-panel home-feature-panel--showcase" aria-label="Selected tools and technologies">
-          <ShowcaseHeading number="03" title="STACK" href="/Stack" action="ALL TECHNOLOGIES" />
+          <ShowcaseHeading number="06" title="STACK" href="/Stack" action="ALL TECHNOLOGIES" />
           <p className="home-showcase__description">The tools I use most across web development and backend work.</p>
           <StackPlayground
             className="stack-playground--home"

@@ -48,7 +48,7 @@ export default function HomeIntroSequence({ children, afterRays }) {
         <GearScrollReveal
           className="home-profile-reveal"
           enabled={raysComplete}
-          targetSelector=".hero-profile-visual, .identity-name, .identity-role, .identity-statement, .home-profile-summary__label, .home-profile-summary > p:last-child"
+          targetSelector=".hero-profile-visual, .home-page-index, .identity-name, .identity-role, .identity-statement, .home-profile-summary__label, .home-profile-summary__copy, .home-profile-socials"
           distance={18}
           blur={6}
           duration={0.72}

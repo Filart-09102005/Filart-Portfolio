@@ -3,26 +3,27 @@
 import { useCallback, useSyncExternalStore } from "react";
 import PulseHeart from "./PulseHeart.jsx";
 
-const STORAGE_KEY = "hans-filart-sidebar-heart-liked";
+const STORAGE_KEY = "hans-filart-sidebar-heart-v2";
 const CHANGE_EVENT = "hans-filart-sidebar-heart-change";
-const INITIAL_COUNT = 1204;
+const INITIAL_COUNT = 0;
 let fallbackLiked = false;
-let fallbackCount = INITIAL_COUNT;
 
 function readStoredState() {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored === "true" || stored === "false") {
-      return { liked: stored === "true", count: INITIAL_COUNT };
+      const liked = stored === "true";
+      return { liked, count: liked ? 1 : 0 };
     }
 
     const state = stored ? JSON.parse(stored) : null;
+    const liked = typeof state?.liked === "boolean" ? state.liked : false;
     return {
-      liked: typeof state?.liked === "boolean" ? state.liked : false,
-      count: Number.isSafeInteger(state?.count) && state.count >= 0 ? state.count : INITIAL_COUNT,
+      liked,
+      count: liked ? 1 : 0,
     };
   } catch {
-    return { liked: fallbackLiked, count: fallbackCount };
+    return { liked: fallbackLiked, count: fallbackLiked ? 1 : 0 };
   }
 }
 
@@ -55,11 +56,11 @@ export default function PersistentHeart() {
   const liked = useSyncExternalStore(subscribe, readLiked, readServerLiked);
   const count = useSyncExternalStore(subscribe, readCount, readServerCount);
 
-  const handleChange = useCallback((nextLiked, nextCount) => {
-    fallbackLiked = nextLiked;
-    fallbackCount = nextCount;
+  const handleChange = useCallback((nextLiked) => {
+    const likedByThisVisitor = Boolean(nextLiked);
+    fallbackLiked = likedByThisVisitor;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ liked: nextLiked, count: nextCount }));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ liked: likedByThisVisitor }));
     } catch {
       // Keep the toggle usable if browser storage is unavailable.
     }
@@ -75,9 +76,8 @@ export default function PersistentHeart() {
         liked={liked}
         count={count}
         onChange={handleChange}
-        incrementOnly
         showCount
-        label="Add a like to this portfolio"
+        label="Like this portfolio"
         size={24}
         corner={20}
         likedColor="#f06c7d"
