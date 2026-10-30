@@ -1,46 +1,39 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { createClient } from "@supabase/supabase-js";
 import PulseHeart from "./PulseHeart.jsx";
 
 const STORAGE_KEY = "hans-filart-sidebar-heart-v2";
-const CHANGE_EVENT = "hans-filart-sidebar-heart-change";
-const INITIAL_COUNT = 0;
-let fallbackLiked = false;
+const LIKED_CHANGE_EVENT = "hans-filart-sidebar-heart-liked";
+const COUNTER_TABLE = "portfolio_heart_counter";
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dqshpdllkuqgwkhydnaw.supabase.co";
+const supabasePublishableKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_5ZReNVciuL9aOF_WoZ9VTQ_VcHVTZfC";
+const supabase =
+  supabaseUrl && supabasePublishableKey
+    ? createClient(supabaseUrl, supabasePublishableKey)
+    : null;
 
-function readStoredState() {
+function readStoredLike() {
+  if (typeof window === "undefined") return false;
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "true" || stored === "false") {
-      const liked = stored === "true";
-      return { liked, count: liked ? 1 : 0 };
-    }
-
-    const state = stored ? JSON.parse(stored) : null;
-    const liked = typeof state?.liked === "boolean" ? state.liked : false;
-    return {
-      liked,
-      count: liked ? 1 : 0,
-    };
+    if (stored === "true") return true;
+    if (!stored) return false;
+    return JSON.parse(stored)?.liked === true;
   } catch {
-    return { liked: fallbackLiked, count: fallbackLiked ? 1 : 0 };
+    return false;
   }
 }
 
-function readLiked() {
-  return readStoredState().liked;
-}
-
-function readCount() {
-  return readStoredState().count;
-}
-
-function subscribe(onStoreChange) {
-  window.addEventListener("storage", onStoreChange);
-  window.addEventListener(CHANGE_EVENT, onStoreChange);
+function subscribeToLiked(onChange) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(LIKED_CHANGE_EVENT, onChange);
   return () => {
-    window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(CHANGE_EVENT, onStoreChange);
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(LIKED_CHANGE_EVENT, onChange);
   };
 }
 
@@ -48,35 +41,87 @@ function readServerLiked() {
   return false;
 }
 
-function readServerCount() {
-  return INITIAL_COUNT;
-}
-
 export default function PersistentHeart() {
-  const liked = useSyncExternalStore(subscribe, readLiked, readServerLiked);
-  const count = useSyncExternalStore(subscribe, readCount, readServerCount);
+  const liked = useSyncExternalStore(subscribeToLiked, readStoredLike, readServerLiked);
+  const [count, setCount] = useState(0);
+  const [syncFailed, setSyncFailed] = useState(false);
 
-  const handleChange = useCallback((nextLiked) => {
-    const likedByThisVisitor = Boolean(nextLiked);
-    fallbackLiked = likedByThisVisitor;
+  useEffect(() => {
+    if (!supabase) return undefined;
+
+    let active = true;
+    const loadCount = async () => {
+      const { data, error } = await supabase
+        .from(COUNTER_TABLE)
+        .select("total")
+        .eq("id", 1)
+        .single();
+
+      if (active && !error && Number.isFinite(Number(data?.total))) {
+        setCount((current) => Math.max(current, Number(data.total)));
+      }
+    };
+
+    void loadCount();
+
+    const channel = supabase
+      .channel("portfolio-heart-counter")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: COUNTER_TABLE,
+          filter: "id=eq.1",
+        },
+        ({ new: record }) => {
+          const nextCount = Number(record?.total);
+          if (active && Number.isFinite(nextCount)) {
+            setCount(nextCount);
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      void supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const handleChange = useCallback(async () => {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ liked: likedByThisVisitor }));
+      window.localStorage.setItem(STORAGE_KEY, "true");
+      window.dispatchEvent(new Event(LIKED_CHANGE_EVENT));
     } catch {
-      // Keep the toggle usable if browser storage is unavailable.
+      // The shared counter still works if this visitor blocks browser storage.
     }
-    window.dispatchEvent(new Event(CHANGE_EVENT));
+
+    if (!supabase) return;
+
+    try {
+      const { data, error } = await supabase.rpc("increment_portfolio_heart");
+      const nextCount = Number(data);
+      if (error || !Number.isFinite(nextCount)) throw error || new Error("Invalid heart count");
+      setCount((current) => Math.max(current, nextCount));
+      setSyncFailed(false);
+    } catch {
+      setSyncFailed(true);
+    }
   }, []);
 
   return (
     <div className="rail-heart-wrap">
       <span className="rail-heart-label" aria-hidden="true">
-        LIKE THIS PORTFOLIO
+        {syncFailed ? "HEART COUNT DID NOT SYNC" : "LIKE THIS PORTFOLIO"}
       </span>
       <PulseHeart
         liked={liked}
         count={count}
         onChange={handleChange}
         showCount
+        incrementOnly
+        disabled={!supabase}
         label="Like this portfolio"
         size={24}
         corner={20}
