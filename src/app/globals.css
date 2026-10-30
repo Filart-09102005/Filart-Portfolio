@@ -3432,6 +3432,8 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
 }
 
 .about-page__hero {
+  position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
   align-items: center;
@@ -3440,6 +3442,8 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
 }
 
 .about-page__copy {
+  position: relative;
+  z-index: 2;
   min-width: 0;
 }
 
@@ -3504,8 +3508,11 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
 
 .about-page__lanyard-stage {
   position: relative;
+  z-index: 1;
   width: min(100%, 420px);
   height: clamp(480px, 50vw, 540px);
+  overflow: hidden;
+  isolation: isolate;
   justify-self: center;
 }
 

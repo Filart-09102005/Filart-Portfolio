@@ -721,6 +721,7 @@ const Lanyard = ({
   elasticity = 0.5,
   breeze = 0.5,
   interactive = true,
+  constrainDrag = false,
   intro = true,
   className = '',
   style
@@ -749,6 +750,7 @@ const Lanyard = ({
     elasticity,
     breeze,
     interactive,
+    constrainDrag,
     intro
   };
 
@@ -1213,6 +1215,14 @@ const Lanyard = ({
       if (sim.grab) {
         if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6) press = null;
         raycaster.ray.at(sim.grab.reach, sim.grab.target);
+        if (settingsRef.current.constrainDrag) {
+          const grabOffset = scratch.a.copy(sim.grab.local).applyQuaternion(sim.body.quaternion);
+          const halfViewWidth = sim.grab.reach * Math.tan((camera.fov * Math.PI) / 360) * camera.aspect;
+          const maxCenterX = Math.max(0, halfViewWidth - layout.width / 2 - 0.04);
+          const targetCenterX = sim.grab.target.x - grabOffset.x;
+          const boundedCenterX = clamp(targetCenterX, -maxCenterX, maxCenterX);
+          sim.grab.target.x += boundedCenterX - targetCenterX;
+        }
         start();
         return;
       }
