@@ -1,13 +1,12 @@
-import Entrance from "../entrance";
 import PortfolioShell from "../../components/PortfolioShell";
-import { HeroCopy, HomeContent } from "../../components/PortfolioPages";
+import { HomeContent } from "../../components/PortfolioPages";
 
 export default function Page() {
   return (
-    <Entrance introContent={<HeroCopy intro />}>
+    <div className="home-page-shell">
       <PortfolioShell hideTopbar animateMainOnMount={false}>
         <HomeContent />
       </PortfolioShell>
-    </Entrance>
+    </div>
   );
 }

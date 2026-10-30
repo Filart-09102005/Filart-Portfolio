@@ -20,7 +20,6 @@ export default function GearScrollReveal({
   ease = 'power2.out',
   requireScroll = false,
   enabled = true,
-  skipIfIntroSeen = false,
   persistKey = '',
   onRevealComplete,
 }) {
@@ -38,7 +37,6 @@ export default function GearScrollReveal({
     let revealed = false;
     let prepared = false;
     const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    const introAlreadySeen = document.documentElement.dataset.portfolioIntroSeen === 'true';
     const clearAnimatedStyles = () => {
       const clearProps = `opacity,visibility,${animatePosition ? 'transform,' : ''}filter`;
       try {
@@ -73,7 +71,7 @@ export default function GearScrollReveal({
       }
     }
 
-    if (prefersReducedMotion || (skipIfIntroSeen && introAlreadySeen) || wasPersistentlyRevealed) {
+    if (prefersReducedMotion || wasPersistentlyRevealed) {
       revealImmediately();
       return undefined;
     }
@@ -222,7 +220,7 @@ export default function GearScrollReveal({
       delete element.dataset.prepared;
       delete element.dataset.revealed;
     };
-  }, [animatePosition, blur, delay, distance, duration, ease, enabled, initialDelay, onRevealComplete, persistKey, requireScroll, skipIfIntroSeen, stagger, targetSelector, threshold]);
+  }, [animatePosition, blur, delay, distance, duration, ease, enabled, initialDelay, onRevealComplete, persistKey, requireScroll, stagger, targetSelector, threshold]);
 
   return <div ref={ref} className={className}>{children}</div>;
 }

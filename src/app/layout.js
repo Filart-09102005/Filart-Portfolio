@@ -29,8 +29,6 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col">
         <Script id="portfolio-home-prepaint" strategy="beforeInteractive">
           {`document.documentElement.dataset.portfolioJs = "true";
-if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) document.documentElement.dataset.portfolioIntroSeen = "true";
-try { if (sessionStorage.getItem("hans-filart-portfolio-intro-seen") === "seen") document.documentElement.dataset.portfolioIntroSeen = "true"; } catch {}
 const navigationEntry = performance.getEntriesByType("navigation")[0];
 if (window.location.pathname === "/Home" && navigationEntry?.type === "reload") {
   window.history.scrollRestoration = "manual";

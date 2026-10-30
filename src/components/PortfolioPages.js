@@ -7,7 +7,6 @@ import ProjectScrollCue from "./ProjectScrollCue";
 import ProjectHorizontalScroll from "./ProjectHorizontalScroll";
 import AboutInteractiveDetails from "./AboutInteractiveDetails";
 import BounceCards from "./BounceCards";
-import ScrollStack, { ScrollStackItem } from "./ScrollStack";
 import RefineFrame from "./RefineFrame";
 import ExperienceTimeline from "./ExperienceTimeline";
 import RecommendationBoard from "./RecommendationBoard";
@@ -25,14 +24,12 @@ const ABOUT_IMAGE_GROUPS = [
     label: "DESK SETUP",
     title: "A space to focus.",
     description: "The tools I use to study, code, and build practical systems.",
-    mediaClassName: "about-image-stack__media--desk",
     images: [
       {
         src: "/gear/asus-tuf-a15.png",
         alt: "ASUS TUF Gaming A15 laptop",
         title: "ASUS TUF Gaming A15",
         description: "My main machine for studying, coding, and building projects.",
-        featured: true,
       },
       {
         src: "/gear/aula-s75-pro.png",
@@ -65,14 +62,12 @@ const ABOUT_IMAGE_GROUPS = [
     label: "EVERYDAY CARRY",
     title: "Always within reach.",
     description: "My phone and earbuds for the everyday moments between projects.",
-    mediaClassName: "about-image-stack__media--carry",
     images: [
       {
         src: "/gear/vivo-x200-pro.png",
         alt: "Vivo X200 Pro phone",
         title: "VIVO X200 Pro",
         description: "My everyday phone for photos, notes, and ideas on the go.",
-        featured: true,
       },
       {
         src: "/gear/vivo-wireless-earbuds.png",
@@ -87,8 +82,12 @@ const ABOUT_IMAGE_GROUPS = [
     label: "A LITTLE ABOUT ME",
     title: "Hans Filart.",
     description: "A BSIT student, full-stack developer, and lifelong learner from the Philippines.",
-    mediaClassName: "about-image-stack__media--profile",
-    images: [{ src: "/hans-profile-card.svg", alt: "Hans Filart portfolio profile card" }],
+    images: [{
+      src: "/hans-profile-card.svg",
+      alt: "Hans Filart portfolio profile card",
+      title: "A little about me",
+      description: "BSIT student · Full-stack developer",
+    }],
   },
 ];
 
@@ -187,60 +186,43 @@ const CERTIFICATES = [
   },
 ];
 
-function AboutImageStackCard({ item }) {
+function AboutImageCard({ image }) {
   return (
-    <ScrollStackItem itemClassName="about-image-stack__card">
+    <article className="about-image-stack__card">
+      <div className="about-image-stack__image">
+        <Image src={image.src} alt={image.alt} fill sizes="(max-width: 500px) 88vw, (max-width: 760px) 44vw, 24vw" />
+      </div>
       <div className="about-image-stack__copy">
-        <span className="about-image-stack__eyebrow">{item.number} / {item.label}</span>
-        <h3>{item.title}</h3>
-        <p>{item.description}</p>
+        <h4>{image.title}</h4>
+        <p>{image.description}</p>
       </div>
-      <div className={`about-image-stack__media ${item.mediaClassName}`}>
-        {item.images.map((image) => (
-          <div
-            className={`about-image-stack__tile${image.title ? " about-image-stack__tile--captioned" : ""}`}
-            data-featured={image.featured ? "" : undefined}
-            key={image.src}
-          >
-            <Image src={image.src} alt={image.alt} fill sizes="(max-width: 700px) 42vw, 22vw" />
-            {image.title && (
-              <div className="about-image-stack__tile-copy">
-                <h4>{image.title}</h4>
-                <p>{image.description}</p>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </ScrollStackItem>
+    </article>
   );
 }
 
-function IdentityBlock({ intro = false }) {
-  const Heading = intro ? "div" : "h1";
-
+function IdentityBlock() {
   return (
-    <div className={`identity-block${intro ? " identity-block--intro" : ""}`}>
-      <div className={`identity-rule${intro ? " intro-rule" : ""}`} aria-hidden="true" />
-      <Heading className="identity-name" id={intro ? undefined : "hero-title"}>
+    <div className="identity-block">
+      <div className="identity-rule" aria-hidden="true" />
+      <h1 className="identity-name" id="hero-title">
         <span className="identity-mask">
-          <span className={`identity-line${intro ? " intro-name-hans" : ""}`}>HANS</span>
+          <span className="identity-line">HANS</span>
         </span>
         <span className="identity-mask">
-          <span className={`identity-line${intro ? " intro-name-filart" : ""}`}>FILART</span>
+          <span className="identity-line">FILART</span>
         </span>
-      </Heading>
-      <p className={`identity-role${intro ? " intro-role" : ""}`}>Full-Stack Developer <span>·</span> BSIT Student</p>
-      <p className={`identity-statement${intro ? " intro-statement" : ""}`}>Building digital products with purpose.</p>
+      </h1>
+      <p className="identity-role">Full-Stack Developer <span>·</span> BSIT Student</p>
+      <p className="identity-statement">Building digital products with purpose.</p>
     </div>
   );
 }
 
-export function HeroCopy({ intro = false, className = "", summary = "", showActions = true, showScrollCue = true }) {
+export function HeroCopy({ className = "", summary = "", showActions = true, showScrollCue = true }) {
   return (
-    <div className={`hero-copy${intro ? " intro-copy" : ""}${className ? ` ${className}` : ""}`}>
+    <div className={`hero-copy${className ? ` ${className}` : ""}`}>
       {summary && <p className="identity-kicker home-page-index">05 / HOME</p>}
-      <IdentityBlock intro={intro} />
+      <IdentityBlock />
       {summary && (
         <div className="home-profile-summary">
           <p className="home-profile-summary__label">A LITTLE ABOUT ME</p>
@@ -263,8 +245,8 @@ export function HeroCopy({ intro = false, className = "", summary = "", showActi
       )}
       {showActions && (
         <div className="hero-actions">
-          <Link className="button button-primary" href="/Projects" tabIndex={intro ? -1 : undefined}>Explore selected work <span aria-hidden="true">↓</span></Link>
-          <Link className="button button-text" href="/AboutMe" tabIndex={intro ? -1 : undefined}>A little about me <span aria-hidden="true">↗</span></Link>
+          <Link className="button button-primary" href="/Projects">Explore selected work <span aria-hidden="true">↓</span></Link>
+          <Link className="button button-text" href="/AboutMe">A little about me <span aria-hidden="true">↗</span></Link>
         </div>
       )}
       {showScrollCue && (
@@ -677,19 +659,39 @@ export function AboutMeContent() {
           <p>A quick look at the setup and daily carry that make room for learning, building, and everything in between.</p>
         </header>
         </GearScrollReveal>
-        <ScrollStack
-          className="about-image-stack"
-          useWindowScroll
-          stackPosition="15%"
-          itemDistance={74}
-          itemStackDistance={26}
-          itemScale={0.035}
-          dimAmount={0.16}
-          smoothScroll={false}
-          holdDistance={160}
-        >
-          {ABOUT_IMAGE_GROUPS.map((item) => <AboutImageStackCard item={item} key={item.number} />)}
-        </ScrollStack>
+        {ABOUT_IMAGE_GROUPS.map((group) => (
+          <section
+            className={`about-image-stack__group${group.label === "A LITTLE ABOUT ME" ? " about-image-stack__group--profile" : ""}`}
+            key={group.number}
+            aria-labelledby={`about-image-group-${group.number}`}
+          >
+            <GearScrollReveal
+              className="about-image-stack__group-heading-reveal"
+              stagger={0.1}
+              distance={16}
+              blur={5}
+              duration={0.7}
+              threshold={0.2}
+            >
+              <header className="about-image-stack__group-heading">
+                <span className="about-image-stack__eyebrow">{group.number} / {group.label}</span>
+                <h3 id={`about-image-group-${group.number}`}>{group.title}</h3>
+                <p>{group.description}</p>
+              </header>
+            </GearScrollReveal>
+            <GearScrollReveal
+              className="about-image-stack__grid"
+              targetSelector=".about-image-stack__card"
+              stagger={0.09}
+              distance={18}
+              blur={6}
+              duration={0.72}
+              threshold={0.16}
+            >
+              {group.images.map((image) => <AboutImageCard image={image} key={image.src} />)}
+            </GearScrollReveal>
+          </section>
+        ))}
       </section>
 
       <section className="about-hobbies" aria-label="What I do and my hobbies">
