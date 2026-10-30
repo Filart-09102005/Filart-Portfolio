@@ -3632,115 +3632,130 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
   line-height: 1.8;
 }
 
-.about-image-stack__group {
-  margin-top: clamp(32px, 4.5vw, 54px);
+.about-image-stack .scroll-stack__inner {
+  padding-inline: clamp(0px, 2.5vw, 28px);
 }
 
-.about-image-stack__group-heading {
+.about-image-stack__card {
   display: grid;
-  grid-template-columns: minmax(140px, 0.65fr) minmax(190px, 0.9fr) minmax(230px, 1.4fr);
-  align-items: end;
-  gap: 22px;
-  margin-bottom: 17px;
+  height: clamp(300px, 34vw, 390px);
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  align-items: center;
+  gap: clamp(18px, 3vw, 40px);
+  padding: clamp(20px, 3.6vw, 38px);
+  border: 1px solid rgba(235, 237, 228, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #1b1f1b, #151815 76%);
+  color: var(--foreground);
+  box-shadow: 0 20px 44px -30px rgba(0, 0, 0, 0.9);
 }
 
-.about-image-stack__group-heading h3 {
-  margin: 0;
-  color: var(--foreground);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(22px, 2.7vw, 31px);
-  font-weight: 400;
-  letter-spacing: -0.045em;
+.about-image-stack__copy {
+  position: relative;
+  z-index: 1;
+  max-width: 290px;
 }
 
 .about-image-stack__eyebrow {
-  display: block;
   color: var(--sage);
   font-family: var(--font-geist-mono), monospace;
   font-size: 8px;
   letter-spacing: 0.14em;
 }
 
-.about-image-stack__group-heading > p {
-  max-width: 440px;
+.about-image-stack__copy h3 {
+  margin: 17px 0 9px;
+  color: var(--foreground);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(23px, 3vw, 34px);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+
+.about-image-stack__copy p {
+  max-width: 270px;
   margin: 0;
   color: var(--muted-light);
   font-size: 11px;
   line-height: 1.8;
 }
 
-.about-image-stack__grid {
+.about-image-stack__media {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: stretch;
-  gap: 14px;
-}
-
-.about-image-stack__card {
   min-width: 0;
-  overflow: hidden;
-  border: 1px solid rgba(235, 237, 228, 0.11);
-  border-radius: 12px;
-  background: var(--background-raised);
-  transition: border-color 220ms ease, transform 220ms ease, background-color 220ms ease;
+  min-height: 220px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 9px;
 }
 
-.about-image-stack__card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(168, 185, 159, 0.3);
-  background: #1a1e19;
+.about-image-stack__media--single {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
 }
 
-.about-image-stack__image {
+.about-image-stack__media--profile {
+  width: min(100%, 220px);
+  min-height: 250px;
+  justify-self: center;
+}
+
+.about-image-stack__tile {
   position: relative;
-  aspect-ratio: 1.25;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
+  border: 1px solid rgba(235, 237, 228, 0.1);
+  border-radius: 12px;
   background: #20241f;
 }
 
-.about-image-stack__image img {
-  padding: 12px;
+.about-image-stack__tile img {
+  z-index: 0;
+  padding: 7px;
   object-fit: contain;
-  transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.about-image-stack__card:hover .about-image-stack__image img {
-  transform: scale(1.035);
+.about-image-stack__tile--captioned::after {
+  position: absolute;
+  z-index: 1;
+  inset: 34% 0 0;
+  background: linear-gradient(180deg, rgba(15, 18, 15, 0), rgba(15, 18, 15, 0.94) 100%);
+  content: "";
+  pointer-events: none;
 }
 
-.about-image-stack__copy {
-  min-height: 103px;
-  padding: 13px 14px 15px;
+.about-image-stack__tile-copy {
+  position: absolute;
+  z-index: 2;
+  right: 9px;
+  bottom: 8px;
+  left: 9px;
+  display: grid;
+  gap: 3px;
 }
 
-.about-image-stack__copy h4 {
+.about-image-stack__tile-copy h4 {
   margin: 0;
   color: var(--foreground);
-  font-size: 13px;
-  font-weight: 520;
-  letter-spacing: -0.025em;
+  font-size: clamp(8px, 0.75vw, 10px);
+  font-weight: 600;
+  line-height: 1.25;
 }
 
-.about-image-stack__copy p {
-  margin: 6px 0 0;
-  color: var(--muted-light);
-  font-size: 10px;
-  line-height: 1.6;
+.about-image-stack__tile-copy p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: rgba(235, 237, 228, 0.74);
+  font-size: clamp(7px, 0.62vw, 8px);
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.about-image-stack__group--profile .about-image-stack__grid {
-  grid-template-columns: minmax(0, 250px);
-}
-
-@media (max-width: 1000px) and (min-width: 761px) {
-  .about-image-stack__group-heading {
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    gap: 9px 18px;
-  }
-
-  .about-image-stack__group-heading .about-image-stack__eyebrow {
-    grid-column: 1 / -1;
-  }
+.about-image-stack__media--profile .about-image-stack__tile img {
+  padding: 0;
 }
 
 .about-hobbies {
@@ -6580,28 +6595,34 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
 }
 
 @media (max-width: 760px) {
-  .about-image-stack__group-heading {
+  .about-image-stack .scroll-stack__inner {
+    padding-inline: 0;
+  }
+
+  .about-image-stack__card {
+    height: auto;
+    min-height: 460px;
     grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-
-  .about-image-stack__group-heading > p {
-    max-width: 520px;
-  }
-
-  .about-image-stack__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 11px;
-  }
-
-  .about-image-stack__group--profile .about-image-stack__grid {
-    grid-template-columns: minmax(0, 220px);
+    align-content: space-between;
+    gap: 18px;
+    padding: 19px;
   }
 
   .about-image-stack__copy {
-    min-height: 112px;
-    padding: 12px;
+    max-width: 400px;
+  }
+
+  .about-image-stack__media {
+    min-height: 200px;
+  }
+
+  .about-image-stack__media--single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .about-image-stack__media--profile {
+    width: min(100%, 180px);
+    min-height: 225px;
   }
 
   .about-hobbies {
@@ -6628,22 +6649,14 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
 }
 
 @media (max-width: 390px) {
-  .about-image-stack__grid,
-  .about-image-stack__group--profile .about-image-stack__grid {
-    grid-template-columns: minmax(0, 1fr);
+  .about-image-stack__card {
+    min-height: 440px;
+    padding: 16px;
   }
 
-  .about-image-stack__group--profile .about-image-stack__card {
-    width: min(100%, 250px);
-    justify-self: center;
-  }
-
-  .about-image-stack__image {
-    aspect-ratio: 1.28;
-  }
-
-  .about-image-stack__copy {
-    min-height: 0;
+  .about-image-stack__media {
+    min-height: 180px;
+    gap: 7px;
   }
 
   .about-hobbies {

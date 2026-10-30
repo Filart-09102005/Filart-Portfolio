@@ -7,6 +7,7 @@ import ProjectScrollCue from "./ProjectScrollCue";
 import ProjectHorizontalScroll from "./ProjectHorizontalScroll";
 import AboutInteractiveDetails from "./AboutInteractiveDetails";
 import BounceCards from "./BounceCards";
+import ScrollStack, { ScrollStackItem } from "./ScrollStack";
 import RefineFrame from "./RefineFrame";
 import ExperienceTimeline from "./ExperienceTimeline";
 import RecommendationBoard from "./RecommendationBoard";
@@ -186,17 +187,24 @@ const CERTIFICATES = [
   },
 ];
 
-function AboutImageCard({ image }) {
+function AboutImageStackCard({ item }) {
   return (
-    <article className="about-image-stack__card">
-      <div className="about-image-stack__image">
-        <Image src={image.src} alt={image.alt} fill sizes="(max-width: 500px) 88vw, (max-width: 760px) 44vw, 24vw" />
-      </div>
+    <ScrollStackItem itemClassName="about-image-stack__card">
       <div className="about-image-stack__copy">
-        <h4>{image.title}</h4>
-        <p>{image.description}</p>
+        <span className="about-image-stack__eyebrow">{item.number} / {item.label}</span>
+        <h3>{item.title}</h3>
+        <p>{item.description}</p>
       </div>
-    </article>
+      <div className={`about-image-stack__media about-image-stack__media--single${item.label === "A LITTLE ABOUT ME" ? " about-image-stack__media--profile" : ""}`}>
+        <div className="about-image-stack__tile about-image-stack__tile--captioned">
+          <Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 700px) 82vw, 48vw" />
+          <div className="about-image-stack__tile-copy">
+            <h4>{item.image.title}</h4>
+            <p>{item.image.description}</p>
+          </div>
+        </div>
+      </div>
+    </ScrollStackItem>
   );
 }
 
@@ -659,39 +667,23 @@ export function AboutMeContent() {
           <p>A quick look at the setup and daily carry that make room for learning, building, and everything in between.</p>
         </header>
         </GearScrollReveal>
-        {ABOUT_IMAGE_GROUPS.map((group) => (
-          <section
-            className={`about-image-stack__group${group.label === "A LITTLE ABOUT ME" ? " about-image-stack__group--profile" : ""}`}
-            key={group.number}
-            aria-labelledby={`about-image-group-${group.number}`}
-          >
-            <GearScrollReveal
-              className="about-image-stack__group-heading-reveal"
-              stagger={0.1}
-              distance={16}
-              blur={5}
-              duration={0.7}
-              threshold={0.2}
-            >
-              <header className="about-image-stack__group-heading">
-                <span className="about-image-stack__eyebrow">{group.number} / {group.label}</span>
-                <h3 id={`about-image-group-${group.number}`}>{group.title}</h3>
-                <p>{group.description}</p>
-              </header>
-            </GearScrollReveal>
-            <GearScrollReveal
-              className="about-image-stack__grid"
-              targetSelector=".about-image-stack__card"
-              stagger={0.09}
-              distance={18}
-              blur={6}
-              duration={0.72}
-              threshold={0.16}
-            >
-              {group.images.map((image) => <AboutImageCard image={image} key={image.src} />)}
-            </GearScrollReveal>
-          </section>
-        ))}
+        <ScrollStack
+          className="about-image-stack"
+          useWindowScroll
+          stackPosition="15%"
+          itemDistance={74}
+          itemStackDistance={26}
+          itemScale={0.035}
+          dimAmount={0.16}
+          smoothScroll={false}
+          holdDistance={160}
+        >
+          {ABOUT_IMAGE_GROUPS.flatMap((group) =>
+            group.images.map((image) => (
+              <AboutImageStackCard item={{ ...group, image }} key={image.src} />
+            )),
+          )}
+        </ScrollStack>
       </section>
 
       <section className="about-hobbies" aria-label="What I do and my hobbies">
