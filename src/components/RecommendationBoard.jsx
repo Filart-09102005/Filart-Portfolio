@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import GearScrollReveal from "./GearScrollReveal";
 
 function initialFor(name) {
@@ -11,9 +11,47 @@ export default function RecommendationBoard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(true);
+  const [recommendationsLoadError, setRecommendationsLoadError] = useState(false);
   const [status, setStatus] = useState({ type: "idle", message: "" });
   const [headerComplete, setHeaderComplete] = useState(false);
   const finishHeader = useCallback(() => setHeaderComplete(true), []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadRecommendations() {
+      try {
+        const response = await fetch("/api/recommendations", {
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+        });
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || result.success !== true || !Array.isArray(result.recommendations)) {
+          throw new Error("Unable to load recommendations");
+        }
+
+        if (active) {
+          setRecommendations((current) => {
+            const loadedIds = new Set(result.recommendations.map((entry) => entry.id));
+            const newestLocal = current.filter((entry) => !loadedIds.has(entry.id));
+            return [...newestLocal, ...result.recommendations];
+          });
+          setRecommendationsLoadError(false);
+        }
+      } catch {
+        if (active) setRecommendationsLoadError(true);
+      } finally {
+        if (active) setIsLoadingRecommendations(false);
+      }
+    }
+
+    void loadRecommendations();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -50,9 +88,16 @@ export default function RecommendationBoard() {
       }
 
       setRecommendations((current) => [result.recommendation, ...current]);
+      setIsLoadingRecommendations(false);
+      setRecommendationsLoadError(false);
       form.reset();
       setIsFormOpen(false);
-      setStatus({ type: "success", message: "Thank you. Your recommendation has been added below." });
+      setStatus({
+        type: "success",
+        message: result.notificationSent === false
+          ? "Your recommendation was saved, but the email notification could not be sent."
+          : "Thank you. Your recommendation has been added below.",
+      });
     } catch {
       setStatus({
         type: "error",
@@ -171,7 +216,15 @@ export default function RecommendationBoard() {
         duration={0.76}
         threshold={0.14}
       >
-        {recommendations.length ? (
+        {isLoadingRecommendations ? (
+          <div className="recommendation-empty" role="status">
+            <p>Loading recommendations…</p>
+          </div>
+        ) : recommendationsLoadError ? (
+          <div className="recommendation-empty" role="alert">
+            <p>Recommendations are temporarily unavailable. Please refresh and try again.</p>
+          </div>
+        ) : recommendations.length ? (
           <div className="recommendation-grid" role="list" aria-label="Submitted recommendations">
             {recommendations.map((entry, index) => (
               <article className="recommendation-card" key={entry.id} role="listitem">

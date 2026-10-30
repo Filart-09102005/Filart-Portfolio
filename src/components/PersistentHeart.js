@@ -1,20 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createPortfolioSupabaseClient } from "@/lib/portfolio-supabase";
 import PulseHeart from "./PulseHeart.jsx";
 
 const STORAGE_KEY = "hans-filart-sidebar-heart-v2";
 const LIKED_CHANGE_EVENT = "hans-filart-sidebar-heart-liked";
 const COUNTER_TABLE = "portfolio_heart_counter";
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dqshpdllkuqgwkhydnaw.supabase.co";
-const supabasePublishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_5ZReNVciuL9aOF_WoZ9VTQ_VcHVTZfC";
-const supabase =
-  supabaseUrl && supabasePublishableKey
-    ? createClient(supabaseUrl, supabasePublishableKey)
-    : null;
+const supabase = createPortfolioSupabaseClient();
 
 function readStoredLike() {
   if (typeof window === "undefined") return false;

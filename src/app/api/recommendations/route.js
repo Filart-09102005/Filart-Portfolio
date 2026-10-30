@@ -1,8 +1,44 @@
 import { randomUUID } from "node:crypto";
 import { deliverWithFormspree } from "@/lib/formspree";
+import { createPortfolioSupabaseClient } from "@/lib/portfolio-supabase";
+
+const RECOMMENDATION_TABLE = "portfolio_recommendations";
+const supabase = createPortfolioSupabaseClient({
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  },
+});
 
 function getText(value, limit) {
   return typeof value === "string" ? value.trim().slice(0, limit) : "";
+}
+
+export async function GET() {
+  if (!supabase) {
+    return Response.json(
+      { success: false, message: "Recommendations are temporarily unavailable." },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  const { data, error } = await supabase
+    .from(RECOMMENDATION_TABLE)
+    .select("id, name, recommendation, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return Response.json(
+      { success: false, message: "Recommendations are temporarily unavailable." },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  return Response.json(
+    { success: true, recommendations: data ?? [] },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
 
 export async function POST(request) {
@@ -26,6 +62,30 @@ export async function POST(request) {
     return Response.json({ success: false, message: "Please provide your name, a valid email, and a recommendation." }, { status: 400 });
   }
 
+  if (!supabase) {
+    return Response.json(
+      { success: false, message: "The recommendation could not be saved. Please try again later." },
+      { status: 503 },
+    );
+  }
+
+  const savedRecommendation = {
+    id: randomUUID(),
+    name,
+    email,
+    recommendation,
+  };
+  const { error: saveError } = await supabase
+    .from(RECOMMENDATION_TABLE)
+    .insert(savedRecommendation);
+
+  if (saveError) {
+    return Response.json(
+      { success: false, message: "The recommendation could not be saved. Please try again later." },
+      { status: 503 },
+    );
+  }
+
   const delivery = await deliverWithFormspree({
     name,
     email,
@@ -34,14 +94,11 @@ export async function POST(request) {
     _gotcha: "",
   }, request.headers.get("origin"));
 
-  if (!delivery.success) {
-    return Response.json({ success: false, message: delivery.message }, { status: delivery.status });
-  }
-
   return Response.json({
     success: true,
+    notificationSent: delivery.success,
     recommendation: {
-      id: randomUUID(),
+      id: savedRecommendation.id,
       name,
       recommendation,
     },
