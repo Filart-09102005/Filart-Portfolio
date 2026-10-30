@@ -92,6 +92,13 @@ const ABOUT_IMAGE_GROUPS = [
   },
 ];
 
+const ABOUT_IMAGE_CARDS = ABOUT_IMAGE_GROUPS.flatMap((group) =>
+  group.images.map((image) => ({ ...group, image })),
+).map((item, index) => ({
+  ...item,
+  cardNumber: String(index + 1).padStart(2, "0"),
+}));
+
 const ABOUT_HOBBIES = [
   "Online games",
   "Coding side projects",
@@ -191,7 +198,7 @@ function AboutImageStackCard({ item }) {
   return (
     <ScrollStackItem itemClassName="about-image-stack__card">
       <div className="about-image-stack__copy">
-        <span className="about-image-stack__eyebrow">{item.number} / {item.label}</span>
+        <span className="about-image-stack__eyebrow">{item.cardNumber} / {item.label}</span>
         <h3>{item.title}</h3>
         <p>{item.description}</p>
       </div>
@@ -678,11 +685,9 @@ export function AboutMeContent() {
           smoothScroll={false}
           holdDistance={160}
         >
-          {ABOUT_IMAGE_GROUPS.flatMap((group) =>
-            group.images.map((image) => (
-              <AboutImageStackCard item={{ ...group, image }} key={image.src} />
-            )),
-          )}
+          {ABOUT_IMAGE_CARDS.map((item) => (
+            <AboutImageStackCard item={item} key={item.image.src} />
+          ))}
         </ScrollStack>
       </section>
 
