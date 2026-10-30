@@ -774,7 +774,15 @@ const Lanyard = ({
     const canvas = renderer.domElement;
     canvas.className = 'lanyard-canvas';
     canvas.setAttribute('aria-hidden', 'true');
-    container.appendChild(canvas);
+    const layerHost = document.createElement('div');
+    layerHost.className = 'lanyard-drag-overlay';
+    layerHost.setAttribute('aria-hidden', 'true');
+    const hitTarget = document.createElement('div');
+    hitTarget.className = 'lanyard-hit-target';
+    hitTarget.setAttribute('aria-hidden', 'true');
+    hitTarget.tabIndex = -1;
+    layerHost.append(canvas, hitTarget);
+    document.body.appendChild(layerHost);
 
     const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
     const scene = new THREE.Scene();
@@ -842,6 +850,13 @@ const Lanyard = ({
     });
 
     const cardGroup = new THREE.Group();
+    const projectedCardCorner = new THREE.Vector3();
+    const cardCorners = [
+      [-1, -1],
+      [-1, 1],
+      [1, -1],
+      [1, 1]
+    ];
     const bodyMesh = new THREE.Mesh(undefined, edgeMaterial);
     const frontMesh = new THREE.Mesh(undefined, frontMaterial);
     const backMesh = new THREE.Mesh(undefined, backMaterial);
@@ -868,18 +883,24 @@ const Lanyard = ({
     const tuck = new THREE.Vector3();
     const curve = new THREE.CatmullRomCurve3(controls, false, 'centripetal');
     const view = { width: 1, height: 1 };
+    const viewportLayer = { host: layerHost, frameRect: container.getBoundingClientRect() };
     let layout = cardLayout('portrait', 0.3);
     let applied = {};
     let strapScale = STRAP_WIDTH;
     let tileRatio = 2;
     let raf = 0;
+    let frameSyncRaf = 0;
     let last = performance.now();
     let time = 0;
-    let visible = true;
+    let stageVisible = viewportLayer.frameRect.bottom > 0 && viewportLayer.frameRect.top < window.innerHeight;
+    let detachedCard = false;
+    let visible = stageVisible;
     let alive = true;
     let placed = false;
     let hovering = false;
     let press = null;
+    let pointerCaptureTarget = null;
+    layerHost.style.visibility = visible ? 'visible' : 'hidden';
     let imageToken = 0;
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
@@ -915,24 +936,35 @@ const Lanyard = ({
     const frameView = () => {
       const s = settingsRef.current;
       const aspect = view.width / view.height;
-      let viewHeight = layout.height / clamp(s.size, 0.15, 0.9);
+      const frameRect = viewportLayer.frameRect;
+      const frameHeight = Math.max(1, frameRect.height);
+      const frameAspect = Math.max(0.1, frameRect.width / frameHeight);
       const minimumWidth = layout.width / 0.72;
+      let frameWorldHeight = layout.height / clamp(s.size, 0.15, 0.9);
+      if (frameWorldHeight * frameAspect < minimumWidth) frameWorldHeight = minimumWidth / frameAspect;
+      let viewHeight = frameWorldHeight * (view.height / frameHeight);
       if (viewHeight * aspect < minimumWidth) viewHeight = minimumWidth / aspect;
-      const viewWidth = viewHeight * aspect;
+      const unitsPerPixel = viewHeight / view.height;
+      const stageCenterX = frameRect.left + frameRect.width / 2;
+      const stageCenterY = frameRect.top + frameRect.height / 2;
+      const cameraCenterX = (view.width / 2 - stageCenterX) * unitsPerPixel;
+      const cameraCenterY = (stageCenterY - view.height / 2) * unitsPerPixel;
       camera.aspect = aspect;
-      camera.position.set(0, 0, viewHeight / 2 / Math.tan((FOV * Math.PI) / 360));
-      camera.lookAt(0, 0, 0);
+      camera.position.set(cameraCenterX, cameraCenterY, viewHeight / 2 / Math.tan((FOV * Math.PI) / 360));
+      camera.lookAt(cameraCenterX, cameraCenterY, 0);
       camera.updateProjectionMatrix();
       camera.updateMatrixWorld();
       foilUniforms.foilKey.value.set(-2.5, 4, 6).normalize().transformDirection(camera.matrixWorldInverse);
       foilUniforms.foilFill.value.set(3, -1, 4).normalize().transformDirection(camera.matrixWorldInverse);
       foilUniforms.foilTop.value.set(0.5, 4.5, 8).normalize().transformDirection(camera.matrixWorldInverse);
-      const anchorX = ((ANCHORS[s.anchor] ?? 0.5) - 0.5) * viewWidth;
-      const anchorY = viewHeight / 2 + 0.2;
-      const cardTop = viewHeight / 2 - viewHeight * mix(0.12, 0.42, clamp(s.strapLength, 0, 1));
+      const frameWidth = frameWorldHeight * frameAspect;
+      const anchorX = ((ANCHORS[s.anchor] ?? 0.5) - 0.5) * frameWidth;
+      const anchorY = frameWorldHeight / 2 + (frameRect.top + 5) * unitsPerPixel;
+      const cardTop = frameWorldHeight / 2 - frameWorldHeight * mix(0.12, 0.42, clamp(s.strapLength, 0, 1));
       const hangTop = cardTop + (layout.hangY - layout.height / 2);
       sim.anchor.set(anchorX, anchorY, 0);
       configureSimulation(sim, layout, anchorY - hangTop);
+      if (sim.grab) sim.grab.reach = camera.position.distanceTo(sim.grab.from);
       sim.nodes[0].copy(sim.anchor);
       sim.previous[0].copy(sim.anchor);
     };
@@ -955,7 +987,9 @@ const Lanyard = ({
         ring.position.set(0, layout.ringY, 0);
         applied.framingKey = '';
       }
-      const framingKey = `${layoutKey}|${s.size}|${s.anchor}|${s.strapLength}|${view.width}|${view.height}`;
+      const frameRect = viewportLayer.frameRect;
+      const frameKey = `${frameRect.left}:${frameRect.top}:${frameRect.width}:${frameRect.height}`;
+      const framingKey = `${layoutKey}|${s.size}|${s.anchor}|${s.strapLength}|${frameKey}|${view.width}|${view.height}`;
       if (framingKey !== applied.framingKey) {
         frameView();
         if (!placed) {
@@ -1095,11 +1129,55 @@ const Lanyard = ({
       clampGroup.position.copy(hang);
     };
 
+    const projectCardBounds = () => {
+      const canvasRect = canvas.getBoundingClientRect();
+      const halfWidth = layout.width / 2;
+      const halfHeight = layout.height / 2;
+      let left = Infinity;
+      let top = Infinity;
+      let right = -Infinity;
+      let bottom = -Infinity;
+
+      cardGroup.updateMatrixWorld(true);
+      for (const [x, y] of cardCorners) {
+        projectedCardCorner
+          .set(x * halfWidth, y * halfHeight, 0)
+          .applyMatrix4(cardGroup.matrixWorld)
+          .project(camera);
+        const screenX = canvasRect.left + ((projectedCardCorner.x + 1) / 2) * canvasRect.width;
+        const screenY = canvasRect.top + ((1 - projectedCardCorner.y) / 2) * canvasRect.height;
+        left = Math.min(left, screenX);
+        top = Math.min(top, screenY);
+        right = Math.max(right, screenX);
+        bottom = Math.max(bottom, screenY);
+      }
+
+      return { left, top, right, bottom, canvasRect };
+    };
+
+    const updateHitTarget = () => {
+      const bounds = projectCardBounds();
+      const left = bounds.left - bounds.canvasRect.left;
+      const top = bounds.top - bounds.canvasRect.top;
+      const width = bounds.right - bounds.left;
+      const height = bounds.bottom - bounds.top;
+      if (!Number.isFinite(left + top + width + height) || width < 1 || height < 1) {
+        hitTarget.style.width = '0px';
+        hitTarget.style.height = '0px';
+        return;
+      }
+      hitTarget.style.left = `${left}px`;
+      hitTarget.style.top = `${top}px`;
+      hitTarget.style.width = `${width}px`;
+      hitTarget.style.height = `${height}px`;
+    };
+
     const render = () => {
       cardGroup.position.copy(sim.body.position);
       cardGroup.quaternion.copy(sim.body.quaternion);
       updateBand();
       renderer.render(scene, camera);
+      updateHitTarget();
     };
 
     const physics = () => {
@@ -1143,6 +1221,11 @@ const Lanyard = ({
         placeHanging(sim, layout, false);
       }
       render();
+      if (detachedCard && !sim.grab && cardIsInsideStage()) {
+        detachedCard = false;
+        visible = stageVisible;
+        layerHost.style.visibility = visible ? 'visible' : 'hidden';
+      }
       const resting = sim.calm > 1.2 && !sim.grab && current.breeze === 0;
       if (visible && !resting) raf = requestAnimationFrame(tick);
     };
@@ -1173,7 +1256,7 @@ const Lanyard = ({
     };
 
     const setCursor = value => {
-      if (canvas.style.cursor !== value) canvas.style.cursor = value;
+      if (hitTarget.style.cursor !== value) hitTarget.style.cursor = value;
     };
 
     const flip = point => {
@@ -1201,9 +1284,15 @@ const Lanyard = ({
         target: hit.point.clone()
       };
       press = { x: event.clientX, y: event.clientY, time: performance.now(), point: hit.point.clone() };
-      canvas.setPointerCapture?.(event.pointerId);
+      pointerCaptureTarget = hitTarget;
+      try {
+        hitTarget.setPointerCapture?.(event.pointerId);
+      } catch {
+        pointerCaptureTarget = null;
+      }
       setCursor('grabbing');
       event.preventDefault();
+      event.stopPropagation();
       start();
     };
 
@@ -1211,8 +1300,15 @@ const Lanyard = ({
       if (!settingsRef.current.interactive) return;
       toPointer(event);
       if (sim.grab) {
-        if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6) press = null;
+        if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6) {
+          press = null;
+          detachedCard = true;
+          visible = true;
+          layerHost.style.visibility = 'visible';
+        }
         raycaster.ray.at(sim.grab.reach, sim.grab.target);
+        event.preventDefault();
+        event.stopPropagation();
         start();
         return;
       }
@@ -1226,44 +1322,86 @@ const Lanyard = ({
       sim.grab = null;
       if (press && event.type === 'pointerup' && performance.now() - press.time < 450) flip(press.point);
       press = null;
-      canvas.releasePointerCapture?.(event.pointerId);
+      if (pointerCaptureTarget?.hasPointerCapture?.(event.pointerId)) {
+        pointerCaptureTarget.releasePointerCapture(event.pointerId);
+      }
+      pointerCaptureTarget = null;
       setCursor(hovering && event.pointerType !== 'touch' ? 'grab' : '');
       start();
     };
 
-    const onTouchStart = event => {
-      if (!settingsRef.current.interactive || event.touches.length !== 1) return;
-      toPointer(event.touches[0]);
-      if (pickCard()) event.preventDefault();
-    };
-
-    canvas.addEventListener('pointerdown', onPointerDown);
-    canvas.addEventListener('pointermove', onPointerMove);
-    canvas.addEventListener('pointerup', onPointerUp);
-    canvas.addEventListener('pointercancel', onPointerUp);
-    canvas.addEventListener('lostpointercapture', onPointerUp);
-    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
-
     const resize = () => {
-      view.width = Math.max(1, container.clientWidth);
-      view.height = Math.max(1, container.clientHeight);
+      viewportLayer.frameRect = container.getBoundingClientRect();
+      view.width = Math.max(1, layerHost.clientWidth);
+      view.height = Math.max(1, layerHost.clientHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(view.width, view.height, false);
       apply();
       render();
     };
 
+    const syncStagePosition = () => {
+      viewportLayer.frameRect = container.getBoundingClientRect();
+      stageVisible = viewportLayer.frameRect.bottom > 0 && viewportLayer.frameRect.top < window.innerHeight;
+      visible = stageVisible || detachedCard || !!sim.grab;
+      layerHost.style.visibility = visible ? 'visible' : 'hidden';
+      apply();
+      render();
+      if (visible) start();
+    };
+
+    const cardIsInsideStage = () => {
+      const { left, top, right, bottom } = projectCardBounds();
+      const stageRect = viewportLayer.frameRect;
+      if (!stageRect.width || !stageRect.height) return false;
+      const margin = 3;
+      return left >= stageRect.left + margin && right <= stageRect.right - margin &&
+        top >= stageRect.top + margin && bottom <= stageRect.bottom - margin;
+    };
+
+    const onViewportPointerMove = event => {
+      if (sim.grab) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      onPointerMove(event);
+    };
+
+    const onViewportPointerEnd = event => {
+      if (!sim.grab) return;
+      event.preventDefault();
+      event.stopPropagation();
+      onPointerUp(event);
+    };
+
+    hitTarget.addEventListener('pointerdown', onPointerDown);
+    hitTarget.addEventListener('lostpointercapture', onPointerUp);
+    window.addEventListener('pointermove', onViewportPointerMove, true);
+    window.addEventListener('pointerup', onViewportPointerEnd, true);
+    window.addEventListener('pointercancel', onViewportPointerEnd, true);
+
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(container);
     const intersectionObserver = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
+      stageVisible = entry.isIntersecting;
+      visible = stageVisible || detachedCard || !!sim.grab;
+      layerHost.style.visibility = visible ? 'visible' : 'hidden';
       if (visible) start();
     });
     intersectionObserver.observe(container);
     const onVisibility = () => {
       if (!document.hidden) start();
     };
+    const onScroll = () => {
+      if (frameSyncRaf) return;
+      frameSyncRaf = requestAnimationFrame(() => {
+        frameSyncRaf = 0;
+        syncStagePosition();
+      });
+    };
     document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('resize', resize);
+    window.addEventListener('scroll', onScroll, { passive: true });
 
     applyRef.current = apply;
     resize();
@@ -1271,16 +1409,19 @@ const Lanyard = ({
     return () => {
       alive = false;
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(frameSyncRaf);
       applyRef.current = null;
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
-      canvas.removeEventListener('pointerdown', onPointerDown);
-      canvas.removeEventListener('pointermove', onPointerMove);
-      canvas.removeEventListener('pointerup', onPointerUp);
-      canvas.removeEventListener('pointercancel', onPointerUp);
-      canvas.removeEventListener('lostpointercapture', onPointerUp);
-      canvas.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('pointermove', onViewportPointerMove, true);
+      window.removeEventListener('pointerup', onViewportPointerEnd, true);
+      window.removeEventListener('pointercancel', onViewportPointerEnd, true);
+      hitTarget.removeEventListener('pointerdown', onPointerDown);
+      hitTarget.removeEventListener('lostpointercapture', onPointerUp);
+      layerHost.remove();
       [bodyMesh, frontMesh, backMesh, ring, clampMesh, eyelet, band].forEach(mesh => mesh.geometry?.dispose());
       [frontMaterial, backMaterial, edgeMaterial, metalMaterial, bandMaterial].forEach(material => material.dispose());
       [frontTexture, backTexture, strapTexture, grain, weave].forEach(texture => texture.dispose());
