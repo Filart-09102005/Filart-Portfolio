@@ -226,7 +226,7 @@ export default function RecommendationBoard() {
           </div>
         ) : recommendations.length ? (
           <div
-            className="recommendation-grid"
+            className={`recommendation-grid${recommendations.length === 2 ? " recommendation-grid--pair" : ""}`}
             role="list"
             aria-label="Submitted recommendations"
             style={{ "--recommendation-column-count": Math.min(3, recommendations.length) }}

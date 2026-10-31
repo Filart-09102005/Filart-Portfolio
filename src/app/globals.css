@@ -2906,6 +2906,19 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
   width: 100%;
 }
 
+.recommendation-page .recommendation-grid--pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--recommendation-card-gap);
+}
+
+.recommendation-page .recommendation-grid--pair .recommendation-card {
+  display: flex;
+  width: auto;
+  margin: 0;
+}
+
 .recommendation-list-reveal {
   min-width: 0;
   width: 100%;
