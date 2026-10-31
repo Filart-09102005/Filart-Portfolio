@@ -2903,7 +2903,7 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
 .recommendation-page .recommendation-grid {
   display: grid;
   grid-template-columns: repeat(var(--recommendation-column-count, 3), minmax(0, 1fr));
-  align-items: stretch;
+  align-items: start;
   gap: var(--recommendation-card-gap);
   width: 100%;
 }
@@ -2952,7 +2952,7 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
   display: flex;
   align-items: center;
   gap: 11px;
-  margin-top: auto;
+  margin-top: 0;
   padding-top: 13px;
   border-top: 1px solid rgba(235, 237, 228, 0.1);
 }
