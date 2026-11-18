@@ -87,7 +87,11 @@ export default function GearScrollReveal({
       } catch {
         revealImmediately();
       }
-      return undefined;
+      return () => {
+        clearAnimatedStyles();
+        delete element.dataset.prepared;
+        delete element.dataset.revealed;
+      };
     }
 
     let didScroll = window.scrollY > 2;

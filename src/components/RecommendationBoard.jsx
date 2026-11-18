@@ -226,10 +226,9 @@ export default function RecommendationBoard() {
           </div>
         ) : recommendations.length ? (
           <div
-            className={`recommendation-grid${recommendations.length === 2 ? " recommendation-grid--pair" : ""}`}
+            className="recommendation-grid"
             role="list"
             aria-label="Submitted recommendations"
-            style={{ "--recommendation-column-count": Math.min(3, recommendations.length) }}
           >
             {recommendations.map((entry, index) => (
               <article className="recommendation-card" key={entry.id} role="listitem">

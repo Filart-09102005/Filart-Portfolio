@@ -2901,22 +2901,9 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
 }
 
 .recommendation-page .recommendation-grid {
-  column-count: var(--recommendation-column-count, 3);
+  column-count: 3;
   column-gap: var(--recommendation-card-gap);
   width: 100%;
-}
-
-.recommendation-page .recommendation-grid--pair {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
-  gap: var(--recommendation-card-gap);
-}
-
-.recommendation-page .recommendation-grid--pair .recommendation-card {
-  display: flex;
-  width: auto;
-  margin: 0;
 }
 
 .recommendation-list-reveal {
@@ -2933,13 +2920,13 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
   flex-direction: column;
   margin: 0 0 var(--recommendation-card-gap);
   padding: clamp(19px, 2.4vw, 27px);
+  break-inside: avoid;
+  vertical-align: top;
   overflow: hidden;
   border: 1px solid rgba(235, 237, 228, 0.12);
   border-radius: 16px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.006));
   transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease;
-  break-inside: avoid;
-  vertical-align: top;
 }
 
 .recommendation-card:hover {
@@ -5310,6 +5297,10 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
     --rail-width: 0px;
   }
 
+  .recommendation-page .recommendation-grid {
+    column-count: 2;
+  }
+
   .site-rail {
     z-index: 10002;
     display: flex;
@@ -5771,7 +5762,6 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
 
   .recommendation-page .recommendation-grid {
     column-count: 1;
-    column-gap: 0;
   }
 
   .recommendation-card {
