@@ -1,13 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import GearScrollReveal from "./GearScrollReveal";
+
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 function initialFor(name) {
   return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 }
 
 export default function RecommendationBoard() {
+  const gridRef = useRef(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
@@ -52,6 +55,49 @@ export default function RecommendationBoard() {
       active = false;
     };
   }, []);
+
+  useIsomorphicLayoutEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return undefined;
+
+    const cards = Array.from(grid.children);
+    let frame = 0;
+
+    function layoutCards() {
+      const style = getComputedStyle(grid);
+      const columnCount = parseInt(style.getPropertyValue("--recommendation-column-count"), 10);
+      const gap = parseFloat(style.columnGap);
+      const columnHeights = Array(columnCount).fill(0);
+      cards.forEach((card, index) => {
+        card.style.gridColumn = String(index % columnCount + 1);
+      });
+      const cardHeights = cards.map((card) => card.getBoundingClientRect().height);
+
+      // Keep numbered columns in sequence while stacking each column independently.
+      cards.forEach((card, index) => {
+        const column = index % columnCount;
+        const height = cardHeights[index];
+        card.style.gridRow = `${Math.round(columnHeights[column]) + 1} / span ${Math.ceil(height)}`;
+        columnHeights[column] += height + gap;
+      });
+      grid.dataset.masonry = "true";
+    }
+
+    function scheduleLayout() {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(layoutCards);
+    }
+
+    const observer = new ResizeObserver(scheduleLayout);
+    observer.observe(grid);
+    cards.forEach((card) => observer.observe(card));
+    layoutCards();
+
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [recommendations, isLoadingRecommendations, recommendationsLoadError]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -226,6 +272,7 @@ export default function RecommendationBoard() {
           </div>
         ) : recommendations.length ? (
           <div
+            ref={gridRef}
             className="recommendation-grid"
             role="list"
             aria-label="Submitted recommendations"

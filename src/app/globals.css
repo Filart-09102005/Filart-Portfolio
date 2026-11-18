@@ -2901,11 +2901,17 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
 }
 
 .recommendation-page .recommendation-grid {
+  --recommendation-column-count: 3;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--recommendation-column-count), minmax(0, 1fr));
   align-items: start;
   gap: var(--recommendation-card-gap);
   width: 100%;
+}
+
+.recommendation-page .recommendation-grid[data-masonry="true"] {
+  grid-auto-rows: 1px;
+  row-gap: 0;
 }
 
 .recommendation-list-reveal {
@@ -5298,7 +5304,7 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
   }
 
   .recommendation-page .recommendation-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    --recommendation-column-count: 2;
   }
 
   .site-rail {
@@ -5761,7 +5767,7 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
   }
 
   .recommendation-page .recommendation-grid {
-    grid-template-columns: minmax(0, 1fr);
+    --recommendation-column-count: 1;
   }
 
   .recommendation-card {
