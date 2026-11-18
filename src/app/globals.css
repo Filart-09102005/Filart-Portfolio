@@ -2901,8 +2901,10 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
 }
 
 .recommendation-page .recommendation-grid {
-  column-count: 3;
-  column-gap: var(--recommendation-card-gap);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--recommendation-card-gap);
   width: 100%;
 }
 
@@ -2913,15 +2915,13 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
 
 .recommendation-card {
   position: relative;
-  display: inline-flex;
+  display: flex;
   width: 100%;
   min-width: 0;
   min-height: 0;
   flex-direction: column;
-  margin: 0 0 var(--recommendation-card-gap);
+  margin: 0;
   padding: clamp(19px, 2.4vw, 27px);
-  break-inside: avoid;
-  vertical-align: top;
   overflow: hidden;
   border: 1px solid rgba(235, 237, 228, 0.12);
   border-radius: 16px;
@@ -5298,7 +5298,7 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
   }
 
   .recommendation-page .recommendation-grid {
-    column-count: 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .site-rail {
@@ -5761,7 +5761,7 @@ html[data-portfolio-js="true"] .home-overview-reveal:not([data-prepared="true"])
   }
 
   .recommendation-page .recommendation-grid {
-    column-count: 1;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .recommendation-card {
